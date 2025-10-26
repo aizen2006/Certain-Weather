@@ -36,11 +36,19 @@ A modern, responsive weather forecast application built with React and Redux. Se
   - Redux Toolkit for state management
   - Vite for blazing-fast development
   - TailwindCSS for styling
+  - Vercel Serverless Functions for secure API proxying
+
+- **🔒 Security & CORS Solution**
+  - Serverless function proxy eliminates CORS issues
+  - API key secured on server-side only
+  - Works seamlessly on Vercel deployment
 
 ## 📁 Project Structure
 
 ```
 WeatherForcast/
+├── api/
+│   └── weather.js                  # Vercel serverless function proxy
 ├── src/
 │   ├── Components/
 │   │   ├── Header/
@@ -66,6 +74,7 @@ WeatherForcast/
 │   
 ├── package.json
 ├── vite.config.js
+├── vercel.json                     # Vercel deployment configuration
 └── README.md
 ```
 
@@ -120,6 +129,48 @@ npm run preview
 ```
 
 To preview the production build locally.
+
+## 🚀 Deploying to Vercel
+
+This application is optimized for deployment on Vercel with serverless functions.
+
+### Deployment Steps
+
+1. **Push your code to GitHub**
+   ```bash
+   git add .
+   git commit -m "Add Vercel serverless proxy"
+   git push origin main
+   ```
+
+2. **Import to Vercel**
+   - Go to [vercel.com](https://vercel.com)
+   - Click "New Project"
+   - Import your GitHub repository
+   - Vercel will auto-detect the Vite configuration
+
+3. **Add Environment Variable**
+   - In Vercel project settings, go to "Environment Variables"
+   - Add: `VITE_WEATHER_API_KEY` with your WeatherAPI key
+   - This keeps your API key secure on the server-side
+
+4. **Deploy**
+   - Click "Deploy"
+   - Vercel will build and deploy your app with the serverless function
+
+### Local Development with Serverless Functions
+
+To test the serverless function locally:
+
+```bash
+# Install Vercel CLI globally
+npm install -g vercel
+
+# Run with Vercel dev server (enables serverless functions)
+vercel dev
+```
+
+**Note**: Running `npm run dev` will NOT work with the proxy setup locally. You must use `vercel dev` to test the `/api/weather` endpoint during development.
 
 ## 💾 How localStorage Works
 
@@ -195,6 +246,22 @@ This application uses [WeatherAPI.com](https://www.weatherapi.com/) for weather 
 
 ### API Endpoints Used
 - `GET /v1/current.json` - Current weather data
+
+### Proxy Server Architecture
+
+This application uses a **Vercel Serverless Function** as a proxy to solve CORS issues and secure the API key:
+
+**Flow:**
+1. Frontend makes request to `/api/weather?q=Mumbai`
+2. Vercel serverless function (`api/weather.js`) receives the request
+3. Function fetches data from WeatherAPI using secure server-side API key
+4. Function returns weather data to frontend
+
+**Benefits:**
+- ✅ No CORS issues (same-origin request)
+- ✅ API key never exposed to client
+- ✅ Works seamlessly on Vercel deployment
+- ✅ Serverless = no server management needed
 
 ## 🎨 Features in Detail
 

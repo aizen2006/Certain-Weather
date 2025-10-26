@@ -31,34 +31,47 @@ function OutputBox({ selectionType, latitude, longitude, city, triggerFetch }) {
         const fetchWeather = async () => {
             dispatch(setLoading(true));
             try {
-                const API_KEY = import.meta.env.VITE_WEATHER_API_KEY;
-                
-                if (!API_KEY) {
-                    throw new Error('API key is missing');
-                }
-
-                let url = '';
+                let query = '';
                 let searchParams = {};
 
-                // Build URL and search params based on selection type
+                // Build query string and search params based on selection type
                 if (selectionType === 'city' && city) {
-                    url = `http://api.weatherapi.com/v1/current.json?key=${API_KEY}&q=${city}`;
+                    query = city;
                     searchParams = { type: 'city', city };
                 } 
                 else if (selectionType === 'latitude and longitude' && latitude && longitude) {
-                    url = `http://api.weatherapi.com/v1/current.json?key=${API_KEY}&q=${latitude},${longitude}`;
+                    query = `${latitude},${longitude}`;
                     searchParams = { type: 'latitude and longitude', latitude, longitude };
                 } 
                 else if (selectionType === 'Autolocation' && latitude && longitude) {
-                    url = `http://api.weatherapi.com/v1/current.json?key=${API_KEY}&q=${latitude},${longitude}`;
+                    query = `${latitude},${longitude}`;
                     searchParams = { type: 'Autolocation', latitude, longitude };
                 } 
                 else {
                     throw new Error('Invalid parameters for weather search');
                 }
 
+                // Call our Vercel serverless function proxy
+                const url = `/api/weather?q=${encodeURIComponent(query)}&type=${encodeURIComponent(selectionType)}`;
                 const response = await fetch(url);
-                if (!response.ok) throw new Error(`Failed to fetch weather: ${response.statusText}`);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    let errorMessage = `Failed to fetch weather: ${response.statusText}`;
+                    
+                    try {
+                        const errorData = JSON.parse(errorText);
+                        errorMessage = errorData.error || errorMessage;
+                    } catch (e) {
+                        // If response is not JSON (e.g., HTML error page)
+                        if (errorText.includes('<!DOCTYPE') || errorText.includes('<html')) {
+                            errorMessage = 'API endpoint not found. Please ensure the app is deployed to Vercel or use "vercel dev" for local development.';
+                        }
+                    }
+                    
+                    throw new Error(errorMessage);
+                }
+                
                 const data = await response.json();
                 
                 // Dispatch to Redux - automatically saved to localStorage via middleware
